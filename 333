@@ -1,0 +1,155 @@
+package filas;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
+
+public class SistemaFilas {
+    public static void main(String[] args) {
+        Queue<String> fila1 = new LinkedList<>();
+        Queue<String> fila2 = new LinkedList<>();
+        Queue<String> fila3 = new LinkedList<>();
+        Queue<String> fila4 = new LinkedList<>();
+        Set<String> pessoasNaFila = new HashSet<>(); // Usamos um conjunto para manter controle das pessoas na fila
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            List<List<String>> grupos = carregarGruposDoArquivo("C:\\Users\\Victo\\OneDrive\\Documentos\\NetBeansProjects\\FILAS\\src\\filas\\grupos.txt");
+
+            while (true) {
+                System.out.println("Comandos disponíveis:");
+                System.out.println("1 - EntrarNaFila");
+                System.out.println("2 - SerAtendido");
+                System.out.println("3 - VerFila");
+                System.out.println("4 - Sair");
+                System.out.println("Digite o número do comando:");
+
+                int comando = scanner.nextInt();
+
+                switch (comando) {
+                    case 1:
+                        entrarNaFila(grupos, fila1, fila2, fila3, fila4, pessoasNaFila);
+                        break;
+                    case 2:
+                        serAtendido(fila1, fila2, fila3, fila4);
+                        break;
+                    case 3:
+                        verFila(fila1, fila2, fila3, fila4);
+                        break;
+                    case 4:
+                        System.out.println("Saindo do programa.");
+                        return;
+                    default:
+                        System.out.println("Comando inválido. Tente novamente.");
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Erro ao carregar grupos do arquivo.");
+        } finally {
+            scanner.close();
+        }
+    }
+
+    public static List<List<String>> carregarGruposDoArquivo(String nomeArquivo) throws IOException {
+        List<List<String>> grupos = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(nomeArquivo));
+
+        String linha;
+        while ((linha = reader.readLine()) != null) {
+            List<String> grupo = Arrays.asList(linha.split(","));
+            grupos.add(grupo);
+        }
+
+        reader.close();
+        return grupos;
+    }
+
+    public static void entrarNaFila(List<List<String>> grupos, Queue<String> fila1, Queue<String> fila2, Queue<String> fila3, Queue<String> fila4, Set<String> pessoasNaFila) {
+        String pessoa = gerarPessoaAleatoria(grupos);
+        if (!pessoasNaFila.contains(pessoa)) {
+            escolherFila(pessoa, fila1, fila2, fila3, fila4, grupos);
+            pessoasNaFila.add(pessoa);
+            System.out.println(pessoa + " entrou na fila.");
+        } else {
+            System.out.println(pessoa + " já está em alguma fila.");
+        }
+    }
+
+    public static void serAtendido(Queue<String> fila1, Queue<String> fila2, Queue<String> fila3, Queue<String> fila4) {
+        if (!fila1.isEmpty()) {
+            String pessoa = fila1.poll();
+            System.out.println("Atendendo " + pessoa + " da fila 1.");
+        } else if (!fila2.isEmpty()) {
+            String pessoa = fila2.poll();
+            System.out.println("Atendendo " + pessoa + " da fila 2.");
+        } else if (!fila3.isEmpty()) {
+            String pessoa = fila3.poll();
+            System.out.println("Atendendo " + pessoa + " da fila 3.");
+        } else if (!fila4.isEmpty()) {
+            String pessoa = fila4.poll();
+            System.out.println("Atendendo " + pessoa + " da fila 4.");
+        } else {
+            System.out.println("Todas as filas estão vazias.");
+        }
+    }
+
+    public static void verFila(Queue<String> fila1, Queue<String> fila2, Queue<String> fila3, Queue<String> fila4) {
+        System.out.println("Estado das filas:");
+        System.out.println("Fila 1: " + fila1);
+        System.out.println("Fila 2: " + fila2);
+        System.out.println("Fila 3: " + fila3);
+        System.out.println("Fila 4: " + fila4);
+    }
+
+    public static void escolherFila(String pessoa, Queue<String> fila1, Queue<String> fila2, Queue<String> fila3, Queue<String> fila4, List<List<String>> grupos) {
+        boolean conheceAlguemNaFila = false;
+        int grupoIndex = -1;
+
+        for (int i = 0; i < grupos.size(); i++) {
+            if (grupos.get(i).contains(pessoa)) {
+                grupoIndex = i;
+                break;
+            }
+        }
+
+        if (grupoIndex == -1) {
+            System.out.println(pessoa + " não pertence a nenhum grupo.");
+            return;
+        }
+
+        if (!fila1.isEmpty() && grupos.get(grupoIndex).contains(fila1.peek())) {
+            conheceAlguemNaFila = true;
+            fila1.add(pessoa);
+        } else if (!fila2.isEmpty() && grupos.get(grupoIndex).contains(fila2.peek())) {
+            conheceAlguemNaFila = true;
+            fila2.add(pessoa);
+        } else if (!fila3.isEmpty() && grupos.get(grupoIndex).contains(fila3.peek())) {
+            conheceAlguemNaFila = true;
+            fila3.add(pessoa);
+        } else if (!fila4.isEmpty() && grupos.get(grupoIndex).contains(fila4.peek())) {
+            conheceAlguemNaFila = true;
+            fila4.add(pessoa);
+        }
+
+        if (!conheceAlguemNaFila) {
+            if (fila1.size() < 5) {
+                fila1.add(pessoa);
+            } else if (fila2.size() < 5) {
+                fila2.add(pessoa);
+            } else if (fila3.size() < 5) {
+                fila3.add(pessoa);
+            } else if (fila4.size() < 5) {
+                fila4.add(pessoa);
+            }
+        }
+    }
+
+    public static String gerarPessoaAleatoria(List<List<String>> grupos) {
+        Random random = new Random();
+        int grupoIndex = random.nextInt(grupos.size());
+        List<String> grupo = grupos.get(grupoIndex);
+        return grupo.get(random.nextInt(grupo.size()));
+    }
+}
